@@ -7,7 +7,7 @@ Members who did this part:
 Kerwin
 Gerick
 
-RNN Part: Emotion/Sentiment examples
+RNN Part: Intent examples
 
 Members who did this part:
 Kavin 
