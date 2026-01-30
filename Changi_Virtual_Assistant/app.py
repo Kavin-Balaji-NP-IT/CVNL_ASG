@@ -241,6 +241,25 @@ RESPONSE_TEMPLATES = {
 
 
 def get_response_for_intent(intent, query=""):
+
+    q = query.strip().lower()
+
+    # direct answers for common short replies
+    if q in ["t1", "terminal 1"]:
+        return "✅ **T1 (Terminal 1)**: Check-in & Departure Hall is on Level 2. Gates are usually **A gates**. What do you need in T1 (gate, check-in, food, transport)?"
+    if q in ["t2", "terminal 2"]:
+        return "✅ **T2 (Terminal 2)**: Connected to MRT (via T2/T3 area). Gates are usually **B gates**. What do you need in T2?"
+    if q in ["t3", "terminal 3"]:
+        return "✅ **T3 (Terminal 3)**: Singapore Airlines hub. Gates are usually **C gates**. What do you need in T3?"
+    if q == "sin":
+        return "✅ **SIN** = Singapore Changi Airport."
+    if q == "sq":
+        return "✅ **SQ** = Singapore Airlines."
+    if q == "tr":
+        return "✅ **TR** = Scoot."
+    if q == "3k":
+        return "✅ **3K** = Jetstar Asia."
+
     """Get appropriate response for detected intent with query-specific customization"""
     templates = RESPONSE_TEMPLATES.get(intent, RESPONSE_TEMPLATES['default'])
     
@@ -303,6 +322,19 @@ def predict_intent(query, top_k=3):
     # Get contextual response
     top_intent = predictions[0]['intent']
     response = get_response_for_intent(top_intent, query)
+    
+
+    top_intent = predictions[0]['intent']
+    top_conf = predictions[0]['confidence']  # already in %
+
+    # If model is unsure, don't commit to a wrong template
+    if top_conf < 45:  # tune 35–55
+        return {
+            'predictions': predictions,
+            'response': "I’m not fully sure what you mean — is this about (1) flight details, (2) terminal/gate, or (3) transport?",
+            'top_intent': 'default',
+            'mode': 'rnn'
+        }
     
     return {
         'predictions': predictions,
