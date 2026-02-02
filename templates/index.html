@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changi Airport Sentiment Analysis</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .airport-icon {
+            font-size: 3em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #3498db;
+        }
+
+        .sentiment-result {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .sentiment-emoji {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .sentiment-label {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .confidence-score {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+
+        .probabilities {
+            margin-top: 25px;
+        }
+
+        .prob-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .prob-bar {
+            margin-bottom: 15px;
+        }
+
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .prob-progress {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .very-positive { color: #27ae60; }
+        .positive { color: #2ecc71; }
+        .neutral { color: #f39c12; }
+        .negative { color: #e74c3c; }
+        .very-negative { color: #c0392b; }
+
+        .very-positive .prob-fill { background: #27ae60; }
+        .positive .prob-fill { background: #2ecc71; }
+        .neutral .prob-fill { background: #f39c12; }
+        .negative .prob-fill { background: #e74c3c; }
+        .very-negative .prob-fill { background: #c0392b; }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+        }
+
+        .examples h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .example-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .example-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .sentiment-emoji {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="airport-icon">
+                <i class="fas fa-plane"></i>
+            </div>
+            <h1>Changi Airport Sentiment Analysis</h1>
+            <p class="subtitle">AI-Powered Passenger Feedback Analysis</p>
+        </div>
+
+        <div class="input-section">
+            <label for="textInput" class="input-label">
+                <i class="fas fa-comment"></i> Enter your feedback or experience:
+            </label>
+            <textarea 
+                id="textInput" 
+                class="text-input" 
+                placeholder="Share your experience at Changi Airport... (e.g., 'The service was amazing and the staff were very helpful!')"
+            ></textarea>
+            <button id="analyzeBtn" class="analyze-btn">
+                <i class="fas fa-brain"></i> Analyze Sentiment
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing sentiment...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="result-card">
+                <div class="sentiment-result">
+                    <div class="sentiment-emoji" id="sentimentEmoji"></div>
+                    <div class="sentiment-label" id="sentimentLabel"></div>
+                    <div class="confidence-score" id="confidenceScore"></div>
+                </div>
+
+                <div class="probabilities">
+                    <div class="prob-title">Detailed Analysis:</div>
+                    <div id="probabilityBars"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3><i class="fas fa-lightbulb"></i> Try these examples:</h3>
+            <button class="example-btn" onclick="setExample('This is the best airport experience ever! Amazing service!')">Very Positive</button>
+            <button class="example-btn" onclick="setExample('Good service and clean facilities')">Positive</button>
+            <button class="example-btn" onclick="setExample('Standard airport experience')">Neutral</button>
+            <button class="example-btn" onclick="setExample('Long waiting times and poor service')">Negative</button>
+            <button class="example-btn" onclick="setExample('Worst airport experience ever! Terrible service!')">Very Negative</button>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+
+        const sentimentConfig = {
+            'Very Positive': { emoji: '😍', color: '#27ae60' },
+            'Positive': { emoji: '😊', color: '#2ecc71' },
+            'Neutral': { emoji: '😐', color: '#f39c12' },
+            'Negative': { emoji: '😞', color: '#e74c3c' },
+            'Very Negative': { emoji: '😡', color: '#c0392b' }
+        };
+
+        function setExample(text) {
+            textInput.value = text;
+            textInput.focus();
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            setTimeout(() => {
+                error.style.display = 'none';
+            }, 5000);
+        }
+
+        function showResults(data) {
+            const sentiment = data.predicted_sentiment;
+            const confidence = data.confidence;
+            const probabilities = data.all_probabilities;
+
+            // Update main result
+            document.getElementById('sentimentEmoji').textContent = sentimentConfig[sentiment].emoji;
+            document.getElementById('sentimentLabel').textContent = sentiment;
+            document.getElementById('sentimentLabel').style.color = sentimentConfig[sentiment].color;
+            document.getElementById('confidenceScore').textContent = `Confidence: ${(confidence * 100).toFixed(1)}%`;
+
+            // Update probability bars
+            const probabilityBars = document.getElementById('probabilityBars');
+            probabilityBars.innerHTML = '';
+
+            Object.entries(probabilities).forEach(([label, prob]) => {
+                const percentage = (prob * 100).toFixed(1);
+                const barClass = label.toLowerCase().replace(' ', '-');
+                
+                const barHTML = `
+                    <div class="prob-bar ${barClass}">
+                        <div class="prob-label">
+                            <span>${label}</span>
+                            <span>${percentage}%</span>
+                        </div>
+                        <div class="prob-progress">
+                            <div class="prob-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                probabilityBars.innerHTML += barHTML;
+            });
+
+            results.style.display = 'block';
+        }
+
+        async function analyzeSentiment() {
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                showError('Please enter some text to analyze.');
+                return;
+            }
+
+            // Show loading
+            analyzeBtn.disabled = true;
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            error.style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResults(data);
+                } else {
+                    showError(data.error || 'An error occurred during analysis.');
+                }
+            } catch (err) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                analyzeBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeSentiment);
+        
+        textInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                analyzeSentiment();
+            }
+        });
+
+        // Auto-resize textarea
+        textInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.max(120, this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>
