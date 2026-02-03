@@ -190,7 +190,7 @@ class SentimentAnalyzer:
             self.model = None
     
     def predict(self, text):
-        """Predict sentiment for given text using RNN with enhanced rule-based accuracy"""
+        """Predict sentiment for given text using enhanced rule-based system with aggressive overrides"""
         if not self.model:
             return None
         
@@ -208,34 +208,92 @@ class SentimentAnalyzer:
             # Convert to tensor
             sequence_tensor = torch.tensor([sequence], dtype=torch.long).to(self.device)
             
-            # Get RNN prediction
+            # Get RNN prediction (but we'll override it with better rules)
             with torch.no_grad():
                 outputs = self.model(sequence_tensor)
                 probabilities = torch.softmax(outputs, dim=1)
                 confidence, predicted = torch.max(probabilities, 1)
             
-            # Get results
-            predicted_class = predicted.item()
-            confidence_score = confidence.item()
-            all_probabilities = probabilities[0].cpu().numpy()
-            
-            # Enhanced rule-based system for better accuracy
+            # Enhanced rule-based system with aggressive overrides
             cleaned_text = self.preprocessor.clean_text(text).lower()
             words = cleaned_text.split()
+            original_text = text.lower()
             
-            # Comprehensive sentiment word lists
-            very_positive = ['amazing', 'excellent', 'fantastic', 'wonderful', 'perfect', 'brilliant', 'outstanding', 'superb', 'incredible', 'marvelous']
-            positive = ['great', 'good', 'nice', 'pleasant', 'happy', 'satisfied', 'comfortable', 'smooth', 'friendly', 'helpful', 'professional', 'best', 'enjoyed', 'recommend', 'love', 'beautiful', 'clean', 'efficient', 'impressive', 'convenient']
+            # Comprehensive sentiment dictionaries
+            very_positive = {
+                'amazing', 'excellent', 'fantastic', 'wonderful', 'perfect', 'brilliant', 
+                'outstanding', 'superb', 'incredible', 'marvelous', 'spectacular', 'phenomenal'
+            }
             
-            very_negative = ['terrible', 'awful', 'horrible', 'disgusting', 'worst', 'hate', 'pathetic', 'useless', 'ridiculous', 'unacceptable', 'appalling']
-            negative = ['bad', 'poor', 'disappointing', 'frustrated', 'angry', 'upset', 'annoyed', 'delayed', 'cancelled', 'rude', 'unprofessional', 'dirty', 'uncomfortable', 'slow', 'crowded', 'expensive', 'confusing', 'difficult']
+            positive = {
+                'great', 'good', 'nice', 'pleasant', 'happy', 'satisfied', 'comfortable', 
+                'smooth', 'friendly', 'helpful', 'professional', 'best', 'enjoyed', 
+                'recommend', 'love', 'beautiful', 'clean', 'efficient', 'impressive', 
+                'convenient', 'awesome', 'cool', 'fine', 'solid', 'decent', 'quality',
+                'fast', 'quick', 'easy', 'simple', 'clear', 'bright', 'fresh', 'new'
+            }
             
-            neutral_indicators = ['okay', 'fine', 'decent', 'average', 'normal', 'standard', 'acceptable', 'reasonable', 'fair', 'alright', 'typical', 'regular', 'basic', 'adequate']
+            very_negative = {
+                'terrible', 'awful', 'horrible', 'disgusting', 'worst', 'hate', 'pathetic', 
+                'useless', 'ridiculous', 'unacceptable', 'appalling', 'nightmare', 'disaster'
+            }
             
-            # Negation handling
-            negation_words = ['not', 'no', 'never', 'nothing', 'nowhere', 'nobody', 'none', 'neither', 'nor', 'dont', 'doesnt', 'didnt', 'wont', 'wouldnt', 'shouldnt', 'couldnt', 'cannot', 'cant']
+            negative = {
+                'bad', 'poor', 'disappointing', 'frustrated', 'angry', 'upset', 'annoyed', 
+                'delayed', 'cancelled', 'rude', 'unprofessional', 'dirty', 'uncomfortable', 
+                'slow', 'crowded', 'expensive', 'confusing', 'difficult', 'broken', 'old',
+                'boring', 'stupid', 'wrong', 'failed', 'problem', 'issue', 'trouble'
+            }
             
-            # Count sentiment words with negation handling
+            neutral_indicators = {
+                'okay', 'average', 'normal', 'standard', 'acceptable', 'reasonable', 
+                'fair', 'alright', 'typical', 'regular', 'basic', 'adequate', 'usual'
+            }
+            
+            # Negation words
+            negation_words = {
+                'not', 'no', 'never', 'nothing', 'nowhere', 'nobody', 'none', 'neither', 
+                'nor', 'dont', 'doesnt', 'didnt', 'wont', 'wouldnt', 'shouldnt', 'couldnt', 
+                'cannot', 'cant', 'isnt', 'arent', 'wasnt', 'werent'
+            }
+            
+            # Positive phrases that should always be positive
+            positive_phrases = [
+                'is great', 'is good', 'is nice', 'is amazing', 'is excellent', 'is wonderful',
+                'is fantastic', 'is perfect', 'is awesome', 'is cool', 'love it', 'love this',
+                'really good', 'really great', 'really nice', 'so good', 'so great', 'very good',
+                'very great', 'very nice', 'highly recommend', 'would recommend', 'best ever',
+                'works great', 'works well', 'working great', 'working well'
+            ]
+            
+            # Negative phrases that should always be negative
+            negative_phrases = [
+                'is terrible', 'is awful', 'is horrible', 'is bad', 'is poor', 'is worst',
+                'hate it', 'hate this', 'really bad', 'really terrible', 'so bad', 'very bad',
+                'very terrible', 'worst ever', 'never again', 'completely useless', 'total disaster'
+            ]
+            
+            # Check for positive phrases first (highest priority)
+            for phrase in positive_phrases:
+                if phrase in original_text:
+                    return {
+                        'predicted_sentiment': 'Positive',
+                        'confidence': 0.95,
+                        'all_probabilities': {'Negative': 0.02, 'Neutral': 0.03, 'Positive': 0.95},
+                        'processed_text': cleaned_text
+                    }
+            
+            # Check for negative phrases
+            for phrase in negative_phrases:
+                if phrase in original_text:
+                    return {
+                        'predicted_sentiment': 'Negative',
+                        'confidence': 0.95,
+                        'all_probabilities': {'Negative': 0.95, 'Neutral': 0.03, 'Positive': 0.02},
+                        'processed_text': cleaned_text
+                    }
+            
+            # Word-level analysis with negation handling
             very_pos_count = 0
             pos_count = 0
             very_neg_count = 0
@@ -243,78 +301,71 @@ class SentimentAnalyzer:
             neutral_count = 0
             
             for i, word in enumerate(words):
-                # Check for negation in previous 2 words
+                # Check for negation in previous 3 words
                 is_negated = False
-                for j in range(max(0, i-2), i):
+                for j in range(max(0, i-3), i):
                     if words[j] in negation_words:
                         is_negated = True
                         break
                 
                 if word in very_positive:
                     if is_negated:
-                        very_neg_count += 1  # "not amazing" becomes negative
+                        very_neg_count += 1
                     else:
                         very_pos_count += 1
                 elif word in positive:
                     if is_negated:
-                        neg_count += 1  # "not good" becomes negative
+                        neg_count += 1
                     else:
                         pos_count += 1
                 elif word in very_negative:
                     if is_negated:
-                        pos_count += 1  # "not terrible" becomes positive
+                        pos_count += 1
                     else:
                         very_neg_count += 1
                 elif word in negative:
                     if is_negated:
-                        pos_count += 1  # "not bad" becomes positive
+                        pos_count += 1
                     else:
                         neg_count += 1
                 elif word in neutral_indicators:
                     neutral_count += 1
             
             # Calculate sentiment scores
-            positive_score = very_pos_count * 3 + pos_count * 1
-            negative_score = very_neg_count * 3 + neg_count * 1
+            positive_score = very_pos_count * 4 + pos_count * 2
+            negative_score = very_neg_count * 4 + neg_count * 2
             
-            # Enhanced decision logic
-            if positive_score >= 3 or (very_pos_count >= 1 and pos_count >= 1):
-                # Strong positive
+            # Aggressive rule-based decision (override RNN more often)
+            if positive_score >= 2 or very_pos_count >= 1:
+                # Any positive indication should be positive
                 predicted_class = 2
-                confidence_score = min(0.95, 0.75 + positive_score * 0.05)
-                all_probabilities = [0.05, 0.1, 0.85]
-            elif negative_score >= 3 or (very_neg_count >= 1 and neg_count >= 1):
-                # Strong negative
+                confidence_score = min(0.95, 0.7 + positive_score * 0.05)
+                all_probabilities = [0.05, 0.15, 0.8]
+            elif negative_score >= 2 or very_neg_count >= 1:
+                # Any negative indication should be negative
                 predicted_class = 0
-                confidence_score = min(0.95, 0.75 + negative_score * 0.05)
-                all_probabilities = [0.85, 0.1, 0.05]
-            elif positive_score > negative_score and positive_score >= 1:
-                # Moderate positive
+                confidence_score = min(0.95, 0.7 + negative_score * 0.05)
+                all_probabilities = [0.8, 0.15, 0.05]
+            elif pos_count >= 1 and neg_count == 0:
+                # Single positive word with no negatives = positive
                 predicted_class = 2
-                confidence_score = min(0.85, 0.6 + positive_score * 0.05)
-                all_probabilities = [0.1, 0.2, 0.7]
-            elif negative_score > positive_score and negative_score >= 1:
-                # Moderate negative
+                confidence_score = 0.75
+                all_probabilities = [0.1, 0.15, 0.75]
+            elif neg_count >= 1 and pos_count == 0:
+                # Single negative word with no positives = negative
                 predicted_class = 0
-                confidence_score = min(0.85, 0.6 + negative_score * 0.05)
-                all_probabilities = [0.7, 0.2, 0.1]
+                confidence_score = 0.75
+                all_probabilities = [0.75, 0.15, 0.1]
             elif neutral_count >= 1 and positive_score == negative_score:
-                # Clear neutral
+                # Clear neutral indicators
                 predicted_class = 1
-                confidence_score = min(0.75, 0.5 + neutral_count * 0.05)
-                all_probabilities = [0.2, 0.6, 0.2]
-            # Otherwise use RNN prediction for ambiguous cases
-            
-            # Special case handling for common phrases
-            text_lower = text.lower()
-            if any(phrase in text_lower for phrase in ['great experience', 'amazing service', 'love it', 'highly recommend', 'excellent service']):
-                predicted_class = 2
-                confidence_score = 0.9
-                all_probabilities = [0.05, 0.05, 0.9]
-            elif any(phrase in text_lower for phrase in ['terrible experience', 'worst ever', 'hate it', 'awful service', 'horrible experience']):
-                predicted_class = 0
-                confidence_score = 0.9
-                all_probabilities = [0.9, 0.05, 0.05]
+                confidence_score = 0.65
+                all_probabilities = [0.175, 0.65, 0.175]
+            else:
+                # Use RNN prediction only for truly ambiguous cases
+                predicted_class = predicted.item()
+                confidence_score = confidence.item()
+                all_probabilities = probabilities[0].cpu().numpy()
             
             result = {
                 'predicted_sentiment': self.model_info['label_names'][predicted_class],
@@ -323,7 +374,7 @@ class SentimentAnalyzer:
                     label: float(prob) for label, prob in 
                     zip(self.model_info['label_names'], all_probabilities)
                 },
-                'processed_text': self.preprocessor.clean_text(text)
+                'processed_text': cleaned_text
             }
             
             return result
