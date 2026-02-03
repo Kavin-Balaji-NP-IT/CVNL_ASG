@@ -230,17 +230,19 @@
             background: #3498db;
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            margin: 5px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            margin: 3px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.85em;
             transition: all 0.3s ease;
+            display: inline-block;
         }
 
         .example-btn:hover {
             background: #2980b9;
             transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         .error {
@@ -316,11 +318,38 @@
 
         <div class="examples">
             <h3><i class="fas fa-lightbulb"></i> Try these accurate examples:</h3>
-            <button class="example-btn" onclick="setExample('Amazing service, absolutely love it!')">Strong Positive</button>
-            <button class="example-btn" onclick="setExample('Great food and beautiful airport')">Clear Positive</button>
-            <button class="example-btn" onclick="setExample('Standard check-in process')">Simple Neutral</button>
-            <button class="example-btn" onclick="setExample('Terrible flight, absolutely horrible')">Strong Negative</button>
-            <button class="example-btn" onclick="setExample('Worst service I have ever experienced')">Very Negative</button>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #27ae60;">✨ Positive Examples:</strong><br>
+                <button class="example-btn" onclick="setExample('Amazing experience at Changi Airport! The staff was incredibly helpful and friendly.')">Amazing Experience</button>
+                <button class="example-btn" onclick="setExample('Absolutely love the facilities here! Everything is so clean and well-organized.')">Love Facilities</button>
+                <button class="example-btn" onclick="setExample('Outstanding service from check-in to boarding. Will definitely fly through Changi again!')">Outstanding Service</button>
+                <button class="example-btn" onclick="setExample('Perfect airport experience! The shopping and dining options are fantastic.')">Perfect Experience</button>
+                <button class="example-btn" onclick="setExample('Excellent customer service and beautiful terminal design. Highly recommend!')">Excellent Service</button>
+                <button class="example-btn" onclick="setExample('Wonderful experience! The immigration process was smooth and efficient.')">Wonderful Experience</button>
+                <button class="example-btn" onclick="setExample('Great job Changi Airport! The free WiFi and comfortable seating made my layover pleasant.')">Great Job</button>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #e74c3c;">😞 Negative Examples:</strong><br>
+                <button class="example-btn" onclick="setExample('Terrible experience! Long queues everywhere and unhelpful staff.')">Terrible Experience</button>
+                <button class="example-btn" onclick="setExample('Worst airport experience ever. Delayed flights and no proper communication.')">Worst Experience</button>
+                <button class="example-btn" onclick="setExample('Awful service at the check-in counter. Staff was rude and unprofessional.')">Awful Service</button>
+                <button class="example-btn" onclick="setExample('Horrible experience with lost baggage and no assistance from airport staff.')">Horrible Experience</button>
+                <button class="example-btn" onclick="setExample('Disgusting food quality and overpriced everything. Very disappointed.')">Disgusting Food</button>
+                <button class="example-btn" onclick="setExample('Pathetic customer service! Waited hours for basic assistance.')">Pathetic Service</button>
+                <button class="example-btn" onclick="setExample('Unacceptable delays and terrible communication from airport management.')">Unacceptable Delays</button>
+            </div>
+
+            <div>
+                <strong style="color: #f39c12;">😐 Neutral Examples:</strong><br>
+                <button class="example-btn" onclick="setExample('Typical airport experience. Met expectations without exceeding them.')">Typical Experience</button>
+                <button class="example-btn" onclick="setExample('The airport was fine. Nothing special but it worked for my needs.')">Fine Airport</button>
+                <button class="example-btn" onclick="setExample('Normal airport experience. Clean facilities and standard service.')">Normal Experience</button>
+                <button class="example-btn" onclick="setExample('Basic airport amenities available. Staff was polite but not exceptional.')">Basic Amenities</button>
+                <button class="example-btn" onclick="setExample('The airport met my expectations. Clean and functional overall.')">Met Expectations</button>
+                <button class="example-btn" onclick="setExample('Flight departed on schedule. Airport operations seemed normal.')">On Schedule</button>
+            </div>
         </div>
     </div>
 

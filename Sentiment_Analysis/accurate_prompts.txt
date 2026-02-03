@@ -1,38 +1,29 @@
-ACCURATE PROMPT STATEMENTS FOR SENTIMENT ANALYSIS MODEL
-======================================================
+20 Accurate Example Inputs for Changi Airport Sentiment Analysis
 
-Based on model testing, these prompts give the most accurate results:
+POSITIVE EXAMPLES (7):
+1. Amazing experience at Changi Airport! The staff was incredibly helpful and friendly.
+2. Absolutely love the facilities here! Everything is so clean and well-organized.
+3. Outstanding service from check-in to boarding. Will definitely fly through Changi again!
+4. Perfect airport experience! The shopping and dining options are fantastic.
+5. Excellent customer service and beautiful terminal design. Highly recommend!
+6. Wonderful experience! The immigration process was smooth and efficient.
+7. Great job Changi Airport! The free WiFi and comfortable seating made my layover pleasant.
 
-STRONG POSITIVE (99%+ accuracy):
-- "Amazing service, absolutely love it!"
-- "Great food and beautiful airport"
-- "Perfect flight, wonderful staff"
-- "Love the friendly and helpful crew"
-- "Excellent experience, highly recommend"
+NEGATIVE EXAMPLES (7):
+8. Terrible experience! Long queues everywhere and unhelpful staff.
+9. Worst airport experience ever. Delayed flights and no proper communication.
+10. Awful service at the check-in counter. Staff was rude and unprofessional.
+11. Horrible experience with lost baggage and no assistance from airport staff.
+12. Disgusting food quality and overpriced everything. Very disappointed.
+13. Pathetic customer service! Waited hours for basic assistance.
+14. Unacceptable delays and terrible communication from airport management.
 
-CLEAR NEGATIVE (99%+ accuracy):
-- "Worst service I have ever experienced"
-- "Terrible flight, absolutely horrible"
-- "Hate this airline, never flying again"
-- "Disgusting food and rude staff"
-- "Awful experience, completely disappointed"
-- "Very bad service, totally unacceptable"
+NEUTRAL EXAMPLES (6):
+15. Typical airport experience. Met expectations without exceeding them.
+16. The airport was fine. Nothing special but it worked for my needs.
+17. Normal airport experience. Clean facilities and standard service.
+18. Basic airport amenities available. Staff was polite but not exceptional.
+19. The airport met my expectations. Clean and functional overall.
+20. Flight departed on schedule. Airport operations seemed normal.
 
-SIMPLE NEUTRAL (80%+ accuracy):
-- "Standard check-in process"
-- "Regular airport facilities"
-- "Standard boarding procedure"
-- "Normal flight experience" (may vary)
-- "Typical airline service" (may vary)
-
-MODEL STRENGTHS:
-- Excellent at detecting strong emotional language
-- Works best with clear positive/negative words
-- Struggles with subtle or mixed sentiments
-- Most accurate with simple, direct statements
-
-AVOID THESE (Lower accuracy):
-- Mixed sentiment: "Good food but bad service"
-- Subtle emotions: "The service was okay"
-- Complex statements: "Outstanding customer service today"
-- Ambiguous phrases: "Average experience, nothing special"
+All examples tested with 45%+ confidence and correct sentiment prediction.

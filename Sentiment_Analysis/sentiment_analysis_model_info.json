@@ -1,15 +1,16 @@
 {
-  "vocab_size": 3000,
-  "embedding_dim": 100,
-  "hidden_dim": 128,
+  "vocab_size": 5000,
+  "max_length": 50,
+  "embedding_dim": 128,
+  "hidden_dim": 256,
+  "num_layers": 2,
   "num_classes": 3,
-  "max_length": 40,
   "label_names": [
     "Negative",
     "Neutral",
     "Positive"
   ],
-  "test_accuracy": 0.7694672131147542,
-  "best_epoch": 5,
-  "total_epochs": 6
+  "test_accuracy": 0.7632058287795992,
+  "best_val_accuracy": 0.7632058287795992,
+  "training_time": "2026-02-03 (Generated)"
 }
