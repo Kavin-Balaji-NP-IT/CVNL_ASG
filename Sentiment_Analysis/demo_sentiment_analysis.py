@@ -1,18 +1,14 @@
 """
-Flask Web Application for Changi Airport Sentiment Analysis
-Using RNN Model for Sentiment Classification
+Demo Script for Comprehensive Sentiment Analysis
+Interactive command-line interface for testing the sentiment model
 """
 
-from flask import Flask, render_template, request, jsonify
 import torch
 import torch.nn as nn
 import pickle
 import json
 import re
 
-app = Flask(__name__)
-
-# Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -116,7 +112,7 @@ class ImprovedSentimentRNN(nn.Module):
 
 
 class SentimentAnalyzer:
-    """RNN-based sentiment analyzer"""
+    """Sentiment analyzer for interactive demo"""
     
     def __init__(self):
         self.model = None
@@ -125,7 +121,7 @@ class SentimentAnalyzer:
         self.load_model()
     
     def load_model(self):
-        """Load the trained RNN model and preprocessor"""
+        """Load the trained model and preprocessor"""
         try:
             # Load model info
             with open('improved_sentiment_model_info_v2.json', 'r') as f:
@@ -148,14 +144,14 @@ class SentimentAnalyzer:
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.model.eval()
             
-            print("Improved RNN sentiment model V2 loaded successfully!")
+            print("✅ Improved RNN sentiment model V2 loaded successfully!")
             
         except Exception as e:
-            print(f"Error loading model: {e}")
+            print(f"❌ Error loading model: {e}")
             self.model = None
     
     def predict(self, text):
-        """Predict sentiment for given text using RNN"""
+        """Predict sentiment for given text"""
         if not self.model:
             return None
         
@@ -197,64 +193,123 @@ class SentimentAnalyzer:
             return result
             
         except Exception as e:
-            print(f"Error in prediction: {e}")
+            print(f"❌ Error in prediction: {e}")
             return None
-
-
-# Initialize the sentiment analyzer
-analyzer = SentimentAnalyzer()
-
-
-@app.route('/')
-def index():
-    """Main page"""
-    return render_template('index.html')
-
-
-@app.route('/analyze', methods=['POST'])
-def analyze_sentiment():
-    """Analyze sentiment endpoint"""
-    try:
-        data = request.get_json()
-        text = data.get('text', '').strip()
-        
-        if not text:
-            return jsonify({'error': 'No text provided'}), 400
-        
-        if not analyzer.model:
-            return jsonify({'error': 'RNN model not loaded'}), 500
-        
-        result = analyzer.predict(text)
-        
-        if result:
-            return jsonify(result)
-        else:
-            return jsonify({'error': 'Prediction failed'}), 500
-            
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/health')
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'model_type': 'RNN',
-        'model_loaded': analyzer.model is not None,
-        'device': str(device)
-    })
-
-
-if __name__ == '__main__':
-    print("="*60)
-    print("CHANGI AIRPORT SENTIMENT ANALYSIS WEB APP")
-    print("="*60)
-    print("Using Improved RNN Model V2 for Sentiment Classification")
-    print(f"Device: {device}")
-    print(f"Model loaded: {analyzer.model is not None}")
-    print("Starting Flask server...")
-    print("Access the app at: http://localhost:5000")
-    print("="*60)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    def analyze_text(self, text):
+        """Analyze text and display results"""
+        result = self.predict(text)
+        
+        if not result:
+            print("❌ Failed to analyze text")
+            return
+        
+        print("\n" + "="*70)
+        print("🎯 SENTIMENT ANALYSIS RESULT")
+        print("="*70)
+        print(f"📝 Input: {text}")
+        print(f"🔍 Processed: {result['processed_text']}")
+        print(f"\n🎭 Predicted Sentiment: {result['predicted_sentiment']}")
+        print(f"📊 Confidence: {result['confidence']:.1%}")
+        
+        # Get sentiment emoji
+        sentiment_emojis = {
+            'Very Negative': '😡',
+            'Negative': '😞', 
+            'Neutral': '😐',
+            'Positive': '😊',
+            'Very Positive': '😍'
+        }
+        
+        emoji = sentiment_emojis.get(result['predicted_sentiment'], '🤔')
+        print(f"😀 Emotion: {emoji}")
+        
+        print(f"\n📈 Probability Distribution:")
+        # Sort by probability
+        sorted_probs = sorted(result['all_probabilities'].items(), 
+                            key=lambda x: x[1], reverse=True)
+        
+        for sentiment, prob in sorted_probs:
+            bar_length = int(prob * 30)
+            bar = "█" * bar_length + "░" * (30 - bar_length)
+            print(f"  {sentiment:<15}: {prob:.1%} |{bar}|")
+        
+        print("="*70)
+
+
+def main():
+    """Interactive demo"""
+    
+    print("="*70)
+    print("🛫 CHANGI AIRPORT SENTIMENT ANALYSIS DEMO")
+    print("="*70)
+    print("🤖 AI-Powered Passenger Feedback Analysis using Improved RNN V2")
+    print("📊 Model: Bidirectional LSTM with Attention Mechanism")
+    print("🎯 Classes: Very Negative, Negative, Neutral, Positive, Very Positive")
+    print("="*70)
+    
+    # Initialize analyzer
+    analyzer = SentimentAnalyzer()
+    
+    if not analyzer.model:
+        print("❌ Failed to load model. Exiting...")
+        return
+    
+    print(f"📈 Model Info:")
+    print(f"  • Test Accuracy: {analyzer.model_info['test_accuracy']:.1%}")
+    print(f"  • Vocabulary Size: {analyzer.model_info['vocab_size']:,}")
+    print(f"  • Model Parameters: 223K (Improved & Optimized)")
+    
+    # Example demonstrations
+    print("\n" + "="*70)
+    print("🧪 EXAMPLE DEMONSTRATIONS")
+    print("="*70)
+    
+    examples = [
+        "Very bad service",
+        "Nice service but food was lacking taste", 
+        "Excellent service and friendly staff",
+        "Terrible experience, worst airline ever",
+        "Amazing flight, highly recommend",
+        "Average experience, nothing special"
+    ]
+    
+    for i, example in enumerate(examples, 1):
+        print(f"\n--- Example {i} ---")
+        analyzer.analyze_text(example)
+    
+    # Interactive mode
+    print("\n" + "="*70)
+    print("🎮 INTERACTIVE MODE")
+    print("="*70)
+    print("💬 Enter passenger feedback to analyze sentiment")
+    print("💡 Try examples like:")
+    print("   • 'The staff were amazing but the food was terrible'")
+    print("   • 'Outstanding customer service!'")
+    print("   • 'Flight was delayed and uncomfortable'")
+    print("🚪 Type 'quit' to exit")
+    print("="*70)
+    
+    while True:
+        try:
+            user_input = input("\n🎤 Enter feedback: ").strip()
+            
+            if user_input.lower() in ['quit', 'exit', 'q']:
+                print("👋 Thank you for using Changi Airport Sentiment Analysis!")
+                break
+            
+            if not user_input:
+                print("⚠️  Please enter some text to analyze.")
+                continue
+            
+            analyzer.analyze_text(user_input)
+            
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            break
+        except Exception as e:
+            print(f"❌ Error: {e}")
+
+
+if __name__ == "__main__":
+    main()
