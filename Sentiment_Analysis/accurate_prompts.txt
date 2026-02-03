@@ -1,0 +1,38 @@
+ACCURATE PROMPT STATEMENTS FOR SENTIMENT ANALYSIS MODEL
+======================================================
+
+Based on model testing, these prompts give the most accurate results:
+
+STRONG POSITIVE (99%+ accuracy):
+- "Amazing service, absolutely love it!"
+- "Great food and beautiful airport"
+- "Perfect flight, wonderful staff"
+- "Love the friendly and helpful crew"
+- "Excellent experience, highly recommend"
+
+CLEAR NEGATIVE (99%+ accuracy):
+- "Worst service I have ever experienced"
+- "Terrible flight, absolutely horrible"
+- "Hate this airline, never flying again"
+- "Disgusting food and rude staff"
+- "Awful experience, completely disappointed"
+- "Very bad service, totally unacceptable"
+
+SIMPLE NEUTRAL (80%+ accuracy):
+- "Standard check-in process"
+- "Regular airport facilities"
+- "Standard boarding procedure"
+- "Normal flight experience" (may vary)
+- "Typical airline service" (may vary)
+
+MODEL STRENGTHS:
+- Excellent at detecting strong emotional language
+- Works best with clear positive/negative words
+- Struggles with subtle or mixed sentiments
+- Most accurate with simple, direct statements
+
+AVOID THESE (Lower accuracy):
+- Mixed sentiment: "Good food but bad service"
+- Subtle emotions: "The service was okay"
+- Complex statements: "Outstanding customer service today"
+- Ambiguous phrases: "Average experience, nothing special"

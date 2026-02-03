@@ -1,0 +1,15 @@
+{
+  "vocab_size": 3000,
+  "embedding_dim": 100,
+  "hidden_dim": 128,
+  "num_classes": 3,
+  "max_length": 40,
+  "label_names": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ],
+  "test_accuracy": 0.7694672131147542,
+  "best_epoch": 5,
+  "total_epochs": 6
+}

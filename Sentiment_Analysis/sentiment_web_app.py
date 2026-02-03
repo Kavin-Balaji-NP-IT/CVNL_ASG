@@ -9,6 +9,7 @@ import torch.nn as nn
 import pickle
 import json
 import re
+from collections import Counter
 
 app = Flask(__name__)
 
@@ -16,48 +17,66 @@ app = Flask(__name__)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-class ImprovedPreprocessor:
-    """Improved preprocessor with better sentiment word handling"""
+class FastImprovedPreprocessor:
+    """Fast improved preprocessor with better emotion word handling"""
     
-    def __init__(self, max_vocab_size=2000):
+    def __init__(self, max_vocab_size=3000):
         self.max_vocab_size = max_vocab_size
         self.word2idx = {'<PAD>': 0, '<UNK>': 1}
         self.vocab_size = 2
         
-        # Critical sentiment words that MUST be in vocabulary
-        self.critical_words = {
-            # Very Negative
-            'very', 'extremely', 'really', 'so', 'absolutely', 'completely',
-            'worst', 'terrible', 'awful', 'horrible', 'disgusting', 'hate',
-            'bad', 'poor', 'disappointing', 'unacceptable', 'disaster',
+        # Key emotion words for better sentiment detection
+        self.emotion_words = {
+            # Strong negative
+            'hate', 'terrible', 'awful', 'horrible', 'worst', 'disgusting', 'nightmare',
+            'disaster', 'pathetic', 'useless', 'ridiculous', 'unacceptable', 'appalling',
+            'bad', 'poor', 'disappointing', 'frustrated', 'angry', 'upset', 'annoyed',
+            'delayed', 'cancelled', 'rude', 'unprofessional', 'dirty', 'uncomfortable',
             
-            # Very Positive  
-            'best', 'excellent', 'amazing', 'fantastic', 'wonderful', 'brilliant',
-            'outstanding', 'perfect', 'superb', 'incredible', 'love', 'great',
-            'good', 'nice', 'pleasant', 'helpful', 'friendly', 'beautiful',
+            # Strong positive
+            'love', 'amazing', 'excellent', 'fantastic', 'wonderful', 'perfect', 'brilliant',
+            'outstanding', 'superb', 'incredible', 'marvelous', 'great', 'good', 'nice',
+            'lovely', 'beautiful', 'pleasant', 'happy', 'pleased', 'satisfied', 'comfortable',
+            'smooth', 'friendly', 'helpful', 'professional', 'courteous', 'best',
             
-            # Neutral/Mixed
-            'but', 'however', 'though', 'although', 'decent', 'okay', 'average',
-            'standard', 'normal', 'regular', 'fine', 'acceptable'
+            # Modifiers
+            'very', 'extremely', 'really', 'so', 'absolutely', 'completely', 'totally',
+            'quite', 'pretty', 'rather', 'incredibly', 'amazingly',
+            
+            # Mixed/neutral
+            'but', 'however', 'though', 'although', 'okay', 'fine', 'decent', 'average',
+            'normal', 'standard', 'acceptable', 'reasonable', 'fair', 'alright'
         }
         
     def clean_text(self, text):
-        """Clean text while preserving sentiment"""
+        """Enhanced text cleaning preserving emotional context"""
         if not isinstance(text, str):
             text = str(text)
         
         text = text.lower().strip()
         
-        # Handle contractions
-        text = text.replace("n't", " not")
-        text = text.replace("'re", " are")
-        text = text.replace("'ve", " have")
-        text = text.replace("'ll", " will")
-        text = text.replace("'d", " would")
-        text = text.replace("'m", " am")
+        # Remove airline mentions but preserve context
+        text = re.sub(r'@\w+', '', text)
         
-        # Remove special characters but keep important punctuation
+        # Remove URLs
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+        
+        # Handle contractions
+        contractions = {
+            "n't": " not", "'re": " are", "'ve": " have", "'ll": " will",
+            "'d": " would", "'m": " am", "can't": "cannot", "won't": "will not"
+        }
+        for contraction, expansion in contractions.items():
+            text = text.replace(contraction, expansion)
+        
+        # Remove hashtags but keep the word
+        text = re.sub(r'#(\w+)', r'\1', text)
+        
+        # Keep important punctuation for emotion
         text = re.sub(r'[^\w\s!?.]', ' ', text)
+        
+        # Handle repeated characters (sooo -> soo)
+        text = re.sub(r'(.)\1{2,}', r'\1\1', text)
         
         # Remove extra whitespace
         text = ' '.join(text.split())
@@ -69,30 +88,34 @@ class ImprovedPreprocessor:
         return [self.word2idx.get(word, 1) for word in words]
 
 
-class ImprovedSentimentRNN(nn.Module):
-    """Improved RNN with better architecture for clear sentiment detection"""
+class FastImprovedEmotionRNN(nn.Module):
+    """Fast improved RNN with better emotion detection"""
     
-    def __init__(self, vocab_size, embedding_dim=64, hidden_dim=128, num_classes=5):
-        super(ImprovedSentimentRNN, self).__init__()
+    def __init__(self, vocab_size, embedding_dim=100, hidden_dim=128, num_classes=3, dropout=0.3):
+        super(FastImprovedEmotionRNN, self).__init__()
         
-        # Smaller, more focused architecture
+        # Embedding layer
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
-        self.embedding_dropout = nn.Dropout(0.1)
+        self.embedding_dropout = nn.Dropout(dropout * 0.5)
         
-        # Single bidirectional LSTM layer
+        # Bidirectional LSTM
         self.rnn = nn.LSTM(
-            embedding_dim, hidden_dim, 1,
-            batch_first=True, bidirectional=True
+            embedding_dim, hidden_dim, 2,
+            batch_first=True, dropout=dropout, bidirectional=True
         )
         
-        # Simple attention
+        # Attention mechanism
         self.attention = nn.Linear(hidden_dim * 2, 1)
         
-        # Simpler classification layers
-        self.dropout = nn.Dropout(0.2)
-        self.fc1 = nn.Linear(hidden_dim * 2, 64)
-        self.fc2 = nn.Linear(64, num_classes)
+        # Classification layers
+        self.dropout = nn.Dropout(dropout)
+        self.fc1 = nn.Linear(hidden_dim * 2, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, num_classes)
+        
         self.relu = nn.ReLU()
+        self.bn1 = nn.BatchNorm1d(128)
+        self.bn2 = nn.BatchNorm1d(64)
         
     def forward(self, x):
         # Embedding
@@ -108,9 +131,77 @@ class ImprovedSentimentRNN(nn.Module):
         
         # Classification
         output = self.dropout(attended_output)
-        output = self.relu(self.fc1(output))
+        
+        output = self.fc1(output)
+        output = self.bn1(output)
+        output = self.relu(output)
         output = self.dropout(output)
+        
         output = self.fc2(output)
+        output = self.bn2(output)
+        output = self.relu(output)
+        output = self.dropout(output)
+        
+        output = self.fc3(output)
+        
+        return output
+
+
+class RealWorldSentimentRNN(nn.Module):
+    """Advanced RNN for real-world sentiment analysis"""
+    
+    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=256, num_classes=3, dropout=0.3):
+        super(RealWorldSentimentRNN, self).__init__()
+        
+        # Larger embedding for real-world complexity
+        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
+        self.embedding_dropout = nn.Dropout(dropout * 0.5)
+        
+        # 2-layer bidirectional LSTM for better representation
+        self.rnn = nn.LSTM(
+            embedding_dim, hidden_dim, 2,
+            batch_first=True, dropout=dropout, bidirectional=True
+        )
+        
+        # Multi-head attention (simplified)
+        self.attention = nn.Linear(hidden_dim * 2, 1)
+        
+        # More complex classifier
+        self.dropout = nn.Dropout(dropout)
+        self.fc1 = nn.Linear(hidden_dim * 2, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, num_classes)
+        
+        self.relu = nn.ReLU()
+        self.bn1 = nn.BatchNorm1d(128)
+        self.bn2 = nn.BatchNorm1d(64)
+        
+    def forward(self, x):
+        # Embedding
+        embedded = self.embedding(x)
+        embedded = self.embedding_dropout(embedded)
+        
+        # LSTM
+        rnn_out, _ = self.rnn(embedded)
+        
+        # Attention
+        attention_weights = torch.softmax(self.attention(rnn_out), dim=1)
+        attended_output = torch.sum(attention_weights * rnn_out, dim=1)
+        
+        # Classification
+        output = self.dropout(attended_output)
+        
+        output = self.fc1(output)
+        output = self.bn1(output)
+        output = self.relu(output)
+        output = self.dropout(output)
+        
+        output = self.fc2(output)
+        output = self.bn2(output)
+        output = self.relu(output)
+        output = self.dropout(output)
+        
+        output = self.fc3(output)
         
         return output
 
@@ -128,15 +219,15 @@ class SentimentAnalyzer:
         """Load the trained RNN model and preprocessor"""
         try:
             # Load model info
-            with open('improved_sentiment_model_info_v2.json', 'r') as f:
+            with open('sentiment_analysis_model_info.json', 'r') as f:
                 self.model_info = json.load(f)
             
             # Load preprocessor
-            with open('improved_sentiment_preprocessor_v2.pkl', 'rb') as f:
+            with open('sentiment_analysis_preprocessor.pkl', 'rb') as f:
                 self.preprocessor = pickle.load(f)
             
             # Initialize model
-            self.model = ImprovedSentimentRNN(
+            self.model = FastImprovedEmotionRNN(
                 vocab_size=self.model_info['vocab_size'],
                 embedding_dim=self.model_info['embedding_dim'],
                 hidden_dim=self.model_info['hidden_dim'],
@@ -144,11 +235,12 @@ class SentimentAnalyzer:
             ).to(device)
             
             # Load trained weights
-            checkpoint = torch.load('improved_sentiment_model_v2.pth', map_location=device)
+            checkpoint = torch.load('sentiment_analysis_model.pth', map_location=device)
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.model.eval()
             
-            print("Improved RNN sentiment model V2 loaded successfully!")
+            print("Sentiment Analysis RNN model loaded successfully!")
+            print(f"Model info: {self.model_info}")
             
         except Exception as e:
             print(f"Error loading model: {e}")
@@ -250,9 +342,13 @@ if __name__ == '__main__':
     print("="*60)
     print("CHANGI AIRPORT SENTIMENT ANALYSIS WEB APP")
     print("="*60)
-    print("Using Improved RNN Model V2 for Sentiment Classification")
+    print("Using Sentiment Analysis RNN Model (Kaggle Dataset)")
     print(f"Device: {device}")
     print(f"Model loaded: {analyzer.model is not None}")
+    if analyzer.model_info:
+        print(f"Model classes: {analyzer.model_info['label_names']}")
+        print(f"Test accuracy: {analyzer.model_info.get('test_accuracy', 'N/A'):.2%}")
+        print(f"Vocabulary size: {analyzer.model_info.get('vocab_size', 'N/A'):,}")
     print("Starting Flask server...")
     print("Access the app at: http://localhost:5000")
     print("="*60)
